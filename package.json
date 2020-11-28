@@ -1,0 +1,31 @@
+{
+  "name": "generic-tcp-serial",
+  "version": "1.0.0",
+  "description": "Generic IP to serial interface module",
+  "main": "index.js",
+  "manufacturer": "Generic",
+	"product": ["TCP Serial Port"],
+	"shortname": "tsp",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "TCP",
+    "serial",
+    "RS232",
+    "Generic"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/istnv/companion-module-generic-tcp-serial.git"
+  },
+  "author": "John A Knight Jr <istnv@ayesti.com>",
+  "license": "",
+  "dependencies": {},
+  "bugs": {
+		"url": "https://github.com/istnv/companion-module-generic-tcp-serial/issues"
+  },
+  "jshintConfig": {
+    "esversion": "6"
+  }
+}
