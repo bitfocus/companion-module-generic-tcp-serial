@@ -18,7 +18,7 @@ This module allows 4 incoming TCP connections. It may be possible to confuse the
 Setting | Description
 -----------------|---------------
 **Listen Port** | Enter the IP Port number to listen for a TCP connection. Defaults to 32100 and will need to be changed if more than one serial port is to be configured.
-**Serial Port** | Choose the Serial port attached to the device
+**Serial Port** | Choose the Serial port attached to the device [1]
 **Baud Rate** | Choose the baud rate for the serial port
 **Data Bits** | Choose the data bits for the serial port
 **Parity** | Choose the parity for the serial port
@@ -30,3 +30,5 @@ Variable | Description
 ip_add | Address of the clients connected to the TCP server
 
 This is a helper to assist other modules. There are no actions.
+
+[1] When the module first starts up, it will scan the system for serial ports. Until ports are found, the configuration drop-down menu will be empty or not available. The log will show 'No serial port configured' when the scan is complete.

@@ -411,7 +411,7 @@ class instance extends instance_skel {
 				id: 'info1',
 				width: 12,
 				label: 'Try again',
-				value: "No serial ports detected yet. This takes a few seconds.\nSelect the 'Instances' tab, then choose 'Edit' to return here. "
+				value: "No ports detected yet, which may take a few seconds.<br>Select the 'Instances' tab and wait for log entry 'No serial port configured' Then choose 'Edit' to return here. "
 			});
 			return fields;
 		}

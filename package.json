@@ -20,7 +20,7 @@
     "url": "git+https://github.com/istnv/companion-module-generic-tcp-serial.git"
   },
   "author": "John A Knight Jr <istnv@ayesti.com>",
-  "license": "",
+  "license": "MIT",
   "dependencies": {},
   "bugs": {
 		"url": "https://github.com/istnv/companion-module-generic-tcp-serial/issues"
