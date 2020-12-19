@@ -75,10 +75,10 @@ class instance extends instance_skel {
 	}
 
 	/**
-	 * Cleanup module before being disabled or closed
-	 * @since 1.0.0
+	 * Clear all ports and timers
+	 * @since 1.0.1
 	 */
-	destroy() {
+	clearAll() {
 		if (this.portScan) {
 			clearInterval(this.portScan);
 			delete this.portScan;
@@ -104,6 +104,14 @@ class instance extends instance_skel {
 			}
 			delete this.sPort;
 		}
+	}
+
+	/**
+	 * Cleanup module before being disabled or closed
+	 * @since 1.0.0
+	 */
+	destroy() {
+		this.clearAll();
 		this.status(this.STATUS_UNKNOWN,'Disabled');
 		this.debug("destroyed");
 	}
@@ -124,27 +132,8 @@ class instance extends instance_skel {
 	 * @since 1.0.0
 	 */
 	applyConfig(config) {
-		if (this.portScan) {
-			clearInterval(this.portScan);
-			delete this.portScan;
-		}
-		if (this.tSockets) {
-			this.tSockets.forEach(sock => {
-				sock.end();
-				sock.removeAllListeners();
-			});
-			delete this.tSockets;
-		}
-		if (this.tServer) {
-			this.tServer.close();
-			this.tServer.removeAllListeners();
-			delete this.tServer;
-		}
-		if (this.sPort) {
-			this.sPort.close();
-			this.sPort.removeAllListeners();
-			delete this.sPort;
-		}
+
+		this.clearAll();
 		this.isListening = false;
 		this.IPPort = config.iport || 32100;
 		this.sPortPath = config.sport || 'none';
@@ -154,6 +143,7 @@ class instance extends instance_skel {
 		this.portScan = setInterval(() => this.scanForPorts(), 5000);
 		this.scanForPorts();
 		this.init_variables();
+		this.updateVariables();
 	}
 
 	/**
@@ -186,13 +176,9 @@ class instance extends instance_skel {
 
 		this.sPort = new SerialPort(this.sPortPath,	portOptions);
 
-		this.sPort.on('error', (err) => {
-			this.updateStatus(err);
-		});
+		this.sPort.on('error', this.updateStatus.bind(this));
 
-		this.sPort.on('open', () => {
-			this.init_tcp();
-		});
+		this.sPort.on('open', this.init_tcp.bind(this));
 
 		this.sPort.on('close', (err) => {
 			this.updateStatus(err);
@@ -252,9 +238,7 @@ class instance extends instance_skel {
 			this.tSockets.push(socket);
 			this.updateVariables();
 
-			socket.on('err', (err) => {
-				this.updateStatus(err);
-			});
+			socket.on('err', this.updateStatus.bind(this));
 
 			socket.on('close',() => {
 				this.tSockets.splice(this.tSockets.indexOf(socket), 1);
@@ -296,7 +280,7 @@ class instance extends instance_skel {
 			m = `Error: ${err.message}`;
 		} else if (!this.foundPorts || this.startedAt + this.LOG_DELAY > Date.now()) {
 			// haven't scanned yet so the rest of the statuses don't apply
-			return;
+			s = null;
 		} else if (this.foundPorts.length==0) {
 			l = 'error';
 			s = this.STATUS_WARNING;
@@ -310,7 +294,8 @@ class instance extends instance_skel {
 			s = this.STATUS_WARNING;
 			m = "No serial port configured";
 		}
-		if (l + m + s != this.lastStatus) {
+
+		if (s!=null && l + m + s != this.lastStatus) {
 			this.status(s, m);
 			this.log(l,m);
 			this.lastStatus = l + m + s;
@@ -342,7 +327,10 @@ class instance extends instance_skel {
 	 * @since 1.0.0
 	 */
 	findPorts() {
-		if (this.scanning) return;
+		if (this.scanning) {
+			return;
+		}
+
 		this.scanning = true;
 		this.foundPorts = [];
 
@@ -414,58 +402,58 @@ class instance extends instance_skel {
 				label: 'Try again',
 				value: "No ports detected yet, which may take a few seconds.<br>Select the 'Instances' tab and wait for log entry 'No serial port configured' Then choose 'Edit' to return here. "
 			});
-			return fields;
-		}
-
-		if (this.foundPorts && this.foundPorts.length) {
-			this.foundPorts.forEach( (port) => {
-				ports.push( { id: port.path, label: `${port.manufacturer} (${port.path})` });
-			});
 		} else {
-			ports = [ { id: 'none', label: "No serial ports detected"}];
-		}
 
-		fields.push(
-		{
-			type: 'dropdown',
-			id: 'sport',
-			label: 'Serial port',
-			width: 12,
-			default: ports[0].id,
-			choices: ports
-		},
-		{
-			type: 'dropdown',
-			id: 'baud',
-			label: 'Baud Rate',
-			width: 6,
-			default: this.CHOICES_BAUD_RATES[0].id,
-			choices: this.CHOICES_BAUD_RATES
-		},
-		{
-			type: 'dropdown',
-			id: 'bits',
-			label: 'Data Bits',
-			width: 6,
-			default: this.CHOICES_BITS[0].id,
-			choices: this.CHOICES_BITS
-		},		{
-			type: 'dropdown',
-			id: 'parity',
-			label: 'Parity',
-			width: 6,
-			default: this.CHOICES_PARITY[0].id,
-			choices: this.CHOICES_PARITY
-		},
-		{
-			type: 'dropdown',
-			id: 'stop',
-			label: 'Stop Bits',
-			width: 6,
-			default: this.CHOICES_STOP[0].id,
-			choices: this.CHOICES_STOP
+			if (this.foundPorts && this.foundPorts.length) {
+				this.foundPorts.forEach( (port) => {
+					ports.push( { id: port.path, label: `${port.manufacturer} (${port.path})` });
+				});
+			} else {
+				ports = [ { id: 'none', label: "No serial ports detected"}];
+			}
+
+			fields.push(
+				{
+					type: 'dropdown',
+					id: 'sport',
+					label: 'Serial port',
+					width: 12,
+					default: ports[0].id,
+					choices: ports
+				},
+				{
+					type: 'dropdown',
+					id: 'baud',
+					label: 'Baud Rate',
+					width: 6,
+					default: this.CHOICES_BAUD_RATES[0].id,
+					choices: this.CHOICES_BAUD_RATES
+				},
+				{
+					type: 'dropdown',
+					id: 'bits',
+					label: 'Data Bits',
+					width: 6,
+					default: this.CHOICES_BITS[0].id,
+					choices: this.CHOICES_BITS
+				},		{
+					type: 'dropdown',
+					id: 'parity',
+					label: 'Parity',
+					width: 6,
+					default: this.CHOICES_PARITY[0].id,
+					choices: this.CHOICES_PARITY
+				},
+				{
+					type: 'dropdown',
+					id: 'stop',
+					label: 'Stop Bits',
+					width: 6,
+					default: this.CHOICES_STOP[0].id,
+					choices: this.CHOICES_STOP
+				}
+			);
 		}
-		);
 
 		return fields;
 
