@@ -21,7 +21,6 @@
   },
   "author": "John A Knight Jr <istnv@ayesti.com>",
   "license": "MIT",
-  "dependencies": {},
   "bugs": {
 		"url": "https://github.com/istnv/companion-module-generic-tcp-serial/issues"
   },
