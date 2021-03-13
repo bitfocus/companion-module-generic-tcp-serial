@@ -234,7 +234,6 @@ class instance extends instance_skel {
 
 		tServer.on('connection', (socket) => {
 			let cid = socket.remoteAddress + ":" + socket.remotePort;
-			socket.setEncoding('latin1');
 			this.tSockets.push(socket);
 			this.updateVariables();
 
