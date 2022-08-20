@@ -4,7 +4,7 @@
  */
 
 const net   		= require('net');
-const SerialPort 	= require('serialport');
+const {SerialPort} 	= require('serialport');
 const instance_skel = require('../../instance_skel');
 
 /**
@@ -167,6 +167,7 @@ class instance extends instance_skel {
 		}
 
 		let portOptions = {
+			path: this.sPortPath,
 			autoOpen: false,
 			baudRate: parseInt(this.config.baud),
 			dataBits: parseInt(this.config.bits),
@@ -174,7 +175,7 @@ class instance extends instance_skel {
 			parity: this.config.parity
 		};
 
-		this.sPort = new SerialPort(this.sPortPath,	portOptions);
+		this.sPort = new SerialPort(portOptions);
 
 		this.sPort.on('error', this.updateStatus.bind(this));
 
