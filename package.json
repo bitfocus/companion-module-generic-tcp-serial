@@ -1,6 +1,6 @@
 {
 	"name": "generic-tcp-serial",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"description": "Generic IP to serial interface module",
 	"main": "index.js",
 	"manufacturer": "Generic",
@@ -28,6 +28,9 @@
 	},
 	"jshintConfig": {
 		"esversion": "6"
+	},
+	"dependencies": {
+		"serialport": "10.4.0"
 	},
 	"homepage": "https://github.com/bitfocus/companion-module-generic-tcp-serial#readme",
 	"api_version": "1.0.0"
