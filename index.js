@@ -112,6 +112,7 @@ class instance extends instance_skel {
 	 */
 	destroy() {
 		this.clearAll();
+		clearInterval(this.SERIAL_INTERVAL);
 		this.status(this.STATUS_UNKNOWN,'Disabled');
 		this.debug("destroyed");
 	}
@@ -252,7 +253,7 @@ class instance extends instance_skel {
 				// forward data to the serial port
 				this.debug("TCP: " + toHex(data.toString('latin1'),' '));
 				this.sPort.write(data);
-				if (this.config.response) {
+				if (this.config.response == true) {
 					this.SERIAL_INTERVAL = setTimeout(this.sendError.bind(this), this.config.maxresponse);
 				}
 			});
@@ -274,7 +275,13 @@ class instance extends instance_skel {
 		this.status(this.STATUS_ERROR);
 		this.log('error', 'Error: No response received via Serial connection in the max allotted time of ' + this.config.maxresponse + 'ms');
 		let msg = this.config.errormessage;
-		this.tSockets.forEach(sock => sock.write(msg));
+		try {
+			this.tSockets.forEach(sock => sock.write(msg));
+		}
+		catch(error) {
+			this.log('debug', 'Unable to send error message to sockets: ' + error.toString());
+		}
+		
 
 		clearInterval(this.SERIAL_INTERVAL);
 	}
@@ -383,26 +390,31 @@ class instance extends instance_skel {
 		actionsArr.previousSPort = {
 			label: 'Select Previous Serial Port in List',
 			callback: function (action, bank) {
-				let index = self.foundPorts.findIndex((port) => port.path == self.config.sport);
-				index--;
+				try {
+					let index = self.foundPorts.findIndex((port) => port.path == self.config.sport);
+					index--;
 
-				if (index > 0) {
-					self.log('info', 'Selecting previous Serial port in list: ' + self.foundPorts[index].path);
-					if (self.sPort) { //close the serial port if it is already opened
-						self.log('info', 'First closing already open port: ' + self.config.sport);
-						self.sPort.removeAllListeners();
-						if (self.sPort.isOpen) {
-							self.sPort.close();
+					if (index > 0) {
+						self.log('info', 'Selecting previous Serial port in list: ' + self.foundPorts[index].path);
+						if (self.sPort) { //close the serial port if it is already opened
+							self.log('info', 'First closing already open port: ' + self.config.sport);
+							self.sPort.removeAllListeners();
+							if (self.sPort.isOpen) {
+								self.sPort.close();
+							}
+							delete self.sPort;
 						}
-						delete self.sPort;
+
+						self.config.sport = self.foundPorts[index].path;
+
+						self.applyConfig(self.config);
 					}
-
-					self.config.sport = self.foundPorts[index].path;
-
-					self.applyConfig(self.config);
+					else {
+						self.log('info', 'Cannot select previous Serial port in list: Already on the first port in the list.');
+					}
 				}
-				else {
-					self.log('info', 'Cannot select previous Serial port in list: Already on the first port in the list.');
+				catch(error) {
+					self.log('debug', 'Error Selecting previous Serial Port in List: ' + error.toString());
 				}
 			}
 		};
@@ -410,27 +422,32 @@ class instance extends instance_skel {
 		actionsArr.nextSPort = {
 			label: 'Select Next Serial Port in List',
 			callback: function (action, bank) {
-				let index = self.foundPorts.findIndex((port) => port.path == self.config.sport);
-				index++;
-
-				if (index < self.foundPorts.length) {
-					self.log('info', 'Selecting next Serial port in list: ' + self.foundPorts[index].path);
-					if (self.sPort) { //close the serial port if it is already opened
-						self.log('info', 'First closing already open port: ' + self.config.sport);
-						self.sPort.removeAllListeners();
-						if (self.sPort.isOpen) {
-							self.sPort.close();
+				try {
+					let index = self.foundPorts.findIndex((port) => port.path == self.config.sport);
+					index++;
+	
+					if (index < self.foundPorts.length) {
+						self.log('info', 'Selecting next Serial port in list: ' + self.foundPorts[index].path);
+						if (self.sPort) { //close the serial port if it is already opened
+							self.log('info', 'First closing already open port: ' + self.config.sport);
+							self.sPort.removeAllListeners();
+							if (self.sPort.isOpen) {
+								self.sPort.close();
+							}
+							delete self.sPort;
 						}
-						delete self.sPort;
+					
+						self.config.sport = self.foundPorts[index].path;
+	
+						self.applyConfig(self.config);
 					}
-				
-					self.config.sport = self.foundPorts[index].path;
-
-					self.applyConfig(self.config);
+					else {
+						self.log('info', 'Cannot select next Serial port in list: Already on the last port in the list.');
+					}		
 				}
-				else {
-					self.log('info', 'Cannot select next Serial port in list: Already on the last port in the list.');
-				}		
+				catch(error) {
+					self.log('debug', 'Error Selecting next Serial Port in List: ' + error.toString());
+				}
 			}
 		};
 
