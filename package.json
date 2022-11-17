@@ -1,6 +1,6 @@
 {
 	"name": "generic-tcp-serial",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"description": "Generic IP to serial interface module",
 	"main": "index.js",
 	"manufacturer": "Generic",
@@ -22,6 +22,9 @@
 		"url": "git+https://github.com/bitfocus/companion-module-generic-tcp-serial.git"
 	},
 	"author": "John A Knight Jr <istnv@ayesti.com>",
+	"contributors": [
+		"Joseph Adams <josephdadams@gmail.com>"
+	],
 	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/bitfocus/companion-module-generic-tcp-serial/issues"

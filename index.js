@@ -112,6 +112,7 @@ class instance extends instance_skel {
 	 */
 	destroy() {
 		this.clearAll();
+		clearInterval(this.SERIAL_INTERVAL);
 		this.status(this.STATUS_UNKNOWN,'Disabled');
 		this.debug("destroyed");
 	}
@@ -142,6 +143,7 @@ class instance extends instance_skel {
 		this.startedAt = Date.now();
 		this.portScan = setInterval(() => this.scanForPorts(), 5000);
 		this.scanForPorts();
+		this.init_actions();
 		this.init_variables();
 		this.updateVariables();
 	}
@@ -198,6 +200,7 @@ class instance extends instance_skel {
 				this.debug("COM> " + toHex(data.toString('latin1'),' '));
 				this.tSockets.forEach(sock => sock.write(data));
 			}
+			clearInterval(this.SERIAL_INTERVAL);
 		});
 
 		this.sPort.open();
@@ -250,6 +253,9 @@ class instance extends instance_skel {
 				// forward data to the serial port
 				this.debug("TCP: " + toHex(data.toString('latin1'),' '));
 				this.sPort.write(data);
+				if (this.config.response == true) {
+					this.SERIAL_INTERVAL = setTimeout(this.sendError.bind(this), this.config.maxresponse);
+				}
 			});
 
 		});
@@ -260,6 +266,25 @@ class instance extends instance_skel {
 		this.updateStatus();
 	}
 
+	/**
+	 * Send an error to all TCP sockets if no response was receieved on the Serial Port
+	 * @since 1.0.7
+	 */
+
+	sendError() {
+		this.status(this.STATUS_ERROR);
+		this.log('error', 'Error: No response received via Serial connection in the max allotted time of ' + this.config.maxresponse + 'ms');
+		let msg = this.config.errormessage;
+		try {
+			this.tSockets.forEach(sock => sock.write(msg));
+		}
+		catch(error) {
+			this.log('debug', 'Unable to send error message to sockets: ' + error.toString());
+		}
+		
+
+		clearInterval(this.SERIAL_INTERVAL);
+	}
 
 	/**
 	 * Update companion status and log
@@ -273,7 +298,7 @@ class instance extends instance_skel {
 		if (this.isListening) {
 			l = 'info';
 			s = this.STATUS_OK;
-			m = `Listening on port ${this.IPPort}`;
+			m = `Listening on TCP port ${this.IPPort}`;
 		} else if (err) {
 			l = 'error';
 			s = this.STATUS_ERROR;
@@ -354,6 +379,82 @@ class instance extends instance_skel {
 	}
 
 	/**
+	 * Initialize Actions
+	 * @since 1.0.7
+	 */
+
+	init_actions() {
+		let self = this;
+		let actionsArr = {};
+
+		actionsArr.previousSPort = {
+			label: 'Select Previous Serial Port in List',
+			callback: function (action, bank) {
+				try {
+					let index = self.foundPorts.findIndex((port) => port.path == self.config.sport);
+					index--;
+
+					if (index > 0) {
+						self.log('info', 'Selecting previous Serial port in list: ' + self.foundPorts[index].path);
+						if (self.sPort) { //close the serial port if it is already opened
+							self.log('info', 'First closing already open port: ' + self.config.sport);
+							self.sPort.removeAllListeners();
+							if (self.sPort.isOpen) {
+								self.sPort.close();
+							}
+							delete self.sPort;
+						}
+
+						self.config.sport = self.foundPorts[index].path;
+
+						self.applyConfig(self.config);
+					}
+					else {
+						self.log('info', 'Cannot select previous Serial port in list: Already on the first port in the list.');
+					}
+				}
+				catch(error) {
+					self.log('debug', 'Error Selecting previous Serial Port in List: ' + error.toString());
+				}
+			}
+		};
+
+		actionsArr.nextSPort = {
+			label: 'Select Next Serial Port in List',
+			callback: function (action, bank) {
+				try {
+					let index = self.foundPorts.findIndex((port) => port.path == self.config.sport);
+					index++;
+	
+					if (index < self.foundPorts.length) {
+						self.log('info', 'Selecting next Serial port in list: ' + self.foundPorts[index].path);
+						if (self.sPort) { //close the serial port if it is already opened
+							self.log('info', 'First closing already open port: ' + self.config.sport);
+							self.sPort.removeAllListeners();
+							if (self.sPort.isOpen) {
+								self.sPort.close();
+							}
+							delete self.sPort;
+						}
+					
+						self.config.sport = self.foundPorts[index].path;
+	
+						self.applyConfig(self.config);
+					}
+					else {
+						self.log('info', 'Cannot select next Serial port in list: Already on the last port in the list.');
+					}		
+				}
+				catch(error) {
+					self.log('debug', 'Error Selecting next Serial Port in List: ' + error.toString());
+				}
+			}
+		};
+
+		this.setActions(actionsArr);
+	}
+
+	/**
 	 * Define the dynamic variables for Companion
 	 * @since 1.0.0
 	 */
@@ -400,7 +501,7 @@ class instance extends instance_skel {
 				id: 'info1',
 				width: 12,
 				label: 'Try again',
-				value: "No ports detected yet, which may take a few seconds.<br>Select the 'Instances' tab and wait for log entry 'No serial port configured' Then choose 'Edit' to return here. "
+				value: "No ports detected yet, which may take a few seconds.<br>Select the 'Connections' tab and wait for log entry 'No serial port configured' Then choose 'Edit' to return here. "
 			});
 		} else {
 
@@ -408,6 +509,18 @@ class instance extends instance_skel {
 				this.foundPorts.forEach( (port) => {
 					ports.push( { id: port.path, label: `${port.manufacturer} (${port.path})` });
 				});
+
+				let portObj = ports.find((port) => port.id === this.config.sport);
+
+				if (!portObj) {
+					if (this.config.selectfirstfound) {
+						this.log('info', 'Previously selected port (' + this.config.sport + ') not found.');
+						if (this.ports.length > 1) {
+							this.log('info', 'Selecting first found port: ' + ports[1].id);
+							this.config.sport = ports[1].id;
+						}
+					}
+				}				
 			} else {
 				ports = [ { id: 'none', label: "No serial ports detected"}];
 			}
@@ -451,6 +564,44 @@ class instance extends instance_skel {
 					width: 6,
 					default: this.CHOICES_STOP[0].id,
 					choices: this.CHOICES_STOP
+				}
+			);
+
+			//Select First Port if Previous Port is Not Found
+			fields.push(
+				{
+					type: 'checkbox',
+					id: 'selectfirstfound',
+					label: 'Select First Found Port if Previously Configured Port is Not Found',
+					default: false,
+					width: 12
+				}
+			)
+
+			//Response Expected fields
+			fields.push(
+				{
+					type: 'checkbox',
+					id: 'response',
+					label: 'Response Expected',
+					default: false,
+					width: 3
+				},
+				{
+					type: 'textinput',
+					id: 'maxresponse',
+					label: 'Max Response Time Allowed (in ms)',
+					default: 1000,
+					width: 3,
+					isVisible: (configValues) => configValues.response === true,
+				},
+				{
+					type: 'textinput',
+					id: 'errormessage',
+					label: 'Message to emit to TCP Clients if no response received',
+					default: 'ERR:NORESPONSE',
+					width: 3,
+					isVisible: (configValues) => configValues.response === true,
 				}
 			);
 		}
