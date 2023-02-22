@@ -1,40 +1,21 @@
 {
 	"name": "generic-tcp-serial",
-	"version": "1.0.7",
-	"description": "Generic IP to serial interface module",
+	"version": "2.0.0",
 	"main": "index.js",
-	"manufacturer": "Generic",
-	"product": [
-		"TCP Serial Port"
-	],
-	"shortname": "tsp",
+	"type": "module",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
-	"keywords": [
-		"TCP",
-		"serial",
-		"RS232",
-		"Generic"
-	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/bitfocus/companion-module-generic-tcp-serial.git"
 	},
-	"author": "John A Knight Jr <istnv@ayesti.com>",
-	"contributors": [
-		"Joseph Adams <josephdadams@gmail.com>"
-	],
 	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/bitfocus/companion-module-generic-tcp-serial/issues"
-	},
-	"jshintConfig": {
-		"esversion": "6"
-	},
 	"dependencies": {
-		"serialport": "10.4.0"
+		"@companion-module/base": "~1.1.1",
+		"serialport": "~10.5.0"
 	},
-	"homepage": "https://github.com/bitfocus/companion-module-generic-tcp-serial#readme",
-	"api_version": "1.0.0"
+	"devDependencies": {
+		"@companion-module/tools": "^1.0.2"
+	}
 }
