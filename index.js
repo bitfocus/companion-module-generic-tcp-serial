@@ -32,7 +32,7 @@ const toHex = (data, delim = '') => {
  * creates a small TCP server for a selected serial port
  *
  * @extends InstanceBase
- * @version 2.0.0
+ * @version 2.1.0
  * @since 1.0.0
  * @author John A Knight, Jr <istnv@istnv.com>
  */
@@ -40,7 +40,7 @@ class TSPInstance extends InstanceBase {
 	/**
 	 * Create a new instance of class ip-serial
 	 * @param {Object} internal -	Internal Companion reference
-	 * @version 2.0.0
+	 * @version 2.1.0
 	 * @since 1.0.0
 	 */
 	constructor(internal) {
@@ -56,6 +56,7 @@ class TSPInstance extends InstanceBase {
 		this.sPortPath = 'none'
 		this.isOpen = false
 		this.IPPort = 32100
+		this.devMode = process.env.DEVELOPER
 	}
 
 	/**
@@ -98,7 +99,7 @@ class TSPInstance extends InstanceBase {
 		this.clearAll()
 		clearInterval(this.SERIAL_INTERVAL)
 		this.updateStatus(InstanceStatus.Disconnected, 'Disabled')
-		this.log('debug','Destroyed')
+		this.log('debug', 'Destroyed')
 	}
 
 	/**
@@ -184,7 +185,7 @@ class TSPInstance extends InstanceBase {
 			// make sure client is connected
 			if (this.tSockets.length > 0) {
 				// forward data to the TCP connection (data is a buffer)
-				this.log('debug','COM> ' + toHex(data.toString('latin1') + ' '))
+				this.log('debug', 'COM> ' + toHex(data.toString('latin1') + ' '))
 				this.tSockets.forEach((sock) => sock.write(data))
 			}
 			clearInterval(this.SERIAL_INTERVAL)
@@ -236,7 +237,7 @@ class TSPInstance extends InstanceBase {
 
 			socket.on('data', (data) => {
 				// forward data to the serial port
-				this.log('debug','TCP: ' + toHex(data.toString('latin1') + ' '))
+				this.log('debug', 'TCP: ' + toHex(data.toString('latin1') + ' '))
 				this.sPort.write(data)
 				if (this.config.response == true) {
 					this.SERIAL_INTERVAL = setTimeout(this.sendError.bind(this), this.config.maxresponse)
@@ -346,7 +347,14 @@ class TSPInstance extends InstanceBase {
 		SerialPort.list().then(
 			(ports) => {
 				ports.forEach((p) => {
-					if (p.locationId || p.pnpId) {
+					if (this.devMode) {
+						let nb = ''
+						for (const [k, v] of Object.entries(p)) {
+							nb += (nb == '' ? '' : ', ') + `${k}: ${v}`
+						}
+						this.log('debug', nb)
+					}
+					if (p.locationId || p.vendorId || p.pnpId) {
 						this.foundPorts.push({
 							path: p.path ? p.path : p.comName,
 							manufacturer: p.manufacturer ? p.manufacturer : 'Internal',
@@ -360,7 +368,7 @@ class TSPInstance extends InstanceBase {
 				this.scanning = false
 			},
 			(err) => {
-				this.log('debug','SerialPort.list: ' + err)
+				this.log('debug', 'SerialPort.list: ' + err)
 				this.scanning = false
 			}
 		)
@@ -378,7 +386,7 @@ class TSPInstance extends InstanceBase {
 			previousSPort: {
 				name: 'Select Previous Serial Port in List',
 				options: [],
-				callback: async (action, context)  => {
+				callback: async (action, context) => {
 					try {
 						let index = self.foundPorts.findIndex((port) => port.path == self.config.sport)
 						index--
