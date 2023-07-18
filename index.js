@@ -380,7 +380,6 @@ class TSPInstance extends InstanceBase {
 	 */
 
 	init_actions() {
-		let self = this
 
 		let actionsArr = {
 			previousSPort: {
@@ -388,29 +387,29 @@ class TSPInstance extends InstanceBase {
 				options: [],
 				callback: async (action, context) => {
 					try {
-						let index = self.foundPorts.findIndex((port) => port.path == self.config.sport)
+						let index = this.foundPorts.findIndex((port) => port.path == this.config.sport)
 						index--
 
 						if (index > 0) {
-							self.log('info', 'Selecting previous Serial port in list: ' + self.foundPorts[index].path)
-							if (self.sPort) {
+							this.log('info', 'Selecting previous Serial port in list: ' + this.foundPorts[index].path)
+							if (this.sPort) {
 								//close the serial port if it is already opened
-								self.log('info', 'First closing already open port: ' + self.config.sport)
-								self.sPort.removeAllListeners()
-								if (self.sPort.isOpen) {
-									self.sPort.close()
+								this.log('info', 'First closing already open port: ' + this.config.sport)
+								this.sPort.removeAllListeners()
+								if (this.sPort.isOpen) {
+									this.sPort.close()
 								}
-								delete self.sPort
+								delete this.sPort
 							}
 
-							self.config.sport = self.foundPorts[index].path
+							this.config.sport = this.foundPorts[index].path
 
-							self.applyConfig(self.config)
+							this.applyConfig(this.config)
 						} else {
-							self.log('info', 'Cannot select previous Serial port in list: Already on the first port in the list.')
+							this.log('info', 'Cannot select previous Serial port in list: Already on the first port in the list.')
 						}
 					} catch (error) {
-						self.log('debug', 'Error Selecting previous Serial Port in List: ' + error.toString())
+						this.log('debug', 'Error Selecting previous Serial Port in List: ' + error.toString())
 					}
 				},
 			},
@@ -420,29 +419,29 @@ class TSPInstance extends InstanceBase {
 				options: [],
 				callback: async (action, context) => {
 					try {
-						let index = self.foundPorts.findIndex((port) => port.path == self.config.sport)
+						let index = this.foundPorts.findIndex((port) => port.path == this.config.sport)
 						index++
 
-						if (index < self.foundPorts.length) {
-							self.log('info', 'Selecting next Serial port in list: ' + self.foundPorts[index].path)
-							if (self.sPort) {
+						if (index < this.foundPorts.length) {
+							this.log('info', 'Selecting next Serial port in list: ' + this.foundPorts[index].path)
+							if (this.sPort) {
 								//close the serial port if it is already opened
-								self.log('info', 'First closing already open port: ' + self.config.sport)
-								self.sPort.removeAllListeners()
-								if (self.sPort.isOpen) {
-									self.sPort.close()
+								this.log('info', 'First closing already open port: ' + this.config.sport)
+								this.sPort.removeAllListeners()
+								if (this.sPort.isOpen) {
+									this.sPort.close()
 								}
-								delete self.sPort
+								delete this.sPort
 							}
 
-							self.config.sport = self.foundPorts[index].path
+							this.config.sport = this.foundPorts[index].path
 
-							self.applyConfig(self.config)
+							this.applyConfig(this.config)
 						} else {
-							self.log('info', 'Cannot select next Serial port in list: Already on the last port in the list.')
+							this.log('info', 'Cannot select next Serial port in list: Already on the last port in the list.')
 						}
 					} catch (error) {
-						self.log('debug', 'Error Selecting next Serial Port in List: ' + error.toString())
+						this.log('debug', 'Error Selecting next Serial Port in List: ' + error.toString())
 					}
 				},
 			},
