@@ -12,10 +12,10 @@
 	},
 	"license": "MIT",
 	"dependencies": {
-		"@companion-module/base": "~1.1.1",
+		"@companion-module/base": "^1.7.0",
 		"serialport": "~10.5.0"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^1.0.2"
+		"@companion-module/tools": "^1.4.2"
 	}
 }
