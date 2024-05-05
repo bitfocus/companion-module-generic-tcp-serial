@@ -1,6 +1,6 @@
 {
 	"name": "generic-tcp-serial",
-	"version": "2.2.0",
+	"version": "2.3.0",
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
@@ -12,10 +12,10 @@
 	},
 	"license": "MIT",
 	"dependencies": {
-		"@companion-module/base": "^1.7.0",
+		"@companion-module/base": "^1.8.0",
 		"serialport": "~10.5.0"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^1.4.2"
+		"@companion-module/tools": "^1.5.0"
 	}
 }
