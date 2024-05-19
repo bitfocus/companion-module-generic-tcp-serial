@@ -226,6 +226,7 @@ class TSPInstance extends InstanceBase {
 			let cid = socket.remoteAddress + ':' + socket.remotePort
 			this.tSockets.push(socket)
 			this.updateVariables()
+      socket.setKeepAlive(true,60000)
 
 			socket.on('err', this.doUpdateStatus.bind(this))
 
@@ -534,7 +535,7 @@ class TSPInstance extends InstanceBase {
 					id: 'baud',
 					label: 'Baud Rate',
 					width: 6,
-					default: CHOICES.BAUD_RATES[0].id,
+					default: CHOICES.BAUD_RATES.slice(0,1).id,
 					choices: CHOICES.BAUD_RATES,
 				},
 				{
@@ -542,7 +543,7 @@ class TSPInstance extends InstanceBase {
 					id: 'bits',
 					label: 'Data Bits',
 					width: 6,
-					default: CHOICES.BITS[0].id,
+					default: CHOICES.BITS.slice(0,1).id,
 					choices: CHOICES.BITS,
 				},
 				{
@@ -550,7 +551,7 @@ class TSPInstance extends InstanceBase {
 					id: 'parity',
 					label: 'Parity',
 					width: 6,
-					default: CHOICES.PARITY[0].id,
+					default: CHOICES.PARITY.slice(0,1).id,
 					choices: CHOICES.PARITY,
 				},
 				{
@@ -558,7 +559,7 @@ class TSPInstance extends InstanceBase {
 					id: 'stop',
 					label: 'Stop Bits',
 					width: 6,
-					default: CHOICES.STOP[0].id,
+					default: CHOICES.STOP.slice(0,1).id,
 					choices: CHOICES.STOP,
 				}
 			)
