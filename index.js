@@ -185,7 +185,7 @@ class TSPInstance extends InstanceBase {
 			// make sure client is connected
 			if (this.tSockets.length > 0) {
 				// forward data to the TCP connection (data is a buffer)
-				this.log('debug', 'COM> ' + toHex(data.toString('latin1') + ' '))
+				this.log('debug', 'COM> ' + toHex(data.toString('latin1')) + ' ')
 				this.tSockets.forEach((sock) => sock.write(data))
 			}
 			clearInterval(this.SERIAL_INTERVAL)
@@ -524,10 +524,11 @@ class TSPInstance extends InstanceBase {
 			fields.push(
 				{
 					type: 'dropdown',
+          allowCustom: true,
 					id: 'sport',
 					label: 'Serial port',
 					width: 12,
-					default: ports[0].id,
+					value: ports[ports.length==1 ? 0 : 1].id,
 					choices: ports,
 				},
 				{
@@ -535,7 +536,7 @@ class TSPInstance extends InstanceBase {
 					id: 'baud',
 					label: 'Baud Rate',
 					width: 6,
-					default: CHOICES.BAUD_RATES.slice(0,1).id,
+					value: CHOICES.BAUD_RATES[0].id,
 					choices: CHOICES.BAUD_RATES,
 				},
 				{
@@ -543,7 +544,7 @@ class TSPInstance extends InstanceBase {
 					id: 'bits',
 					label: 'Data Bits',
 					width: 6,
-					default: CHOICES.BITS.slice(0,1).id,
+					value: CHOICES.BITS[0].id,
 					choices: CHOICES.BITS,
 				},
 				{
@@ -551,7 +552,7 @@ class TSPInstance extends InstanceBase {
 					id: 'parity',
 					label: 'Parity',
 					width: 6,
-					default: CHOICES.PARITY.slice(0,1).id,
+					value: CHOICES.PARITY[0].id,
 					choices: CHOICES.PARITY,
 				},
 				{
@@ -559,7 +560,7 @@ class TSPInstance extends InstanceBase {
 					id: 'stop',
 					label: 'Stop Bits',
 					width: 6,
-					default: CHOICES.STOP.slice(0,1).id,
+					value: CHOICES.STOP[0].id,
 					choices: CHOICES.STOP,
 				}
 			)
