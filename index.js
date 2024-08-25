@@ -225,6 +225,7 @@ class TSPInstance extends InstanceBase {
 		tServer.on('connection', (socket) => {
 			let cid = socket.remoteAddress + ':' + socket.remotePort
 			this.tSockets.push(socket)
+      this.log('debug',`Connection from ${cid}`)
 			this.updateVariables()
       socket.setKeepAlive(true,60000)
 
@@ -238,7 +239,7 @@ class TSPInstance extends InstanceBase {
 
 			socket.on('data', (data) => {
 				// forward data to the serial port
-				this.log('debug', 'TCP: ' + toHex(data.toString('latin1') + ' '))
+				this.log('debug', 'TCP: ' + toHex(data.toString('latin1')) + ' ')
 				this.sPort.write(data)
 				if (this.config.response == true) {
 					this.SERIAL_INTERVAL = setTimeout(this.sendError.bind(this), this.config.maxresponse)
@@ -353,13 +354,16 @@ class TSPInstance extends InstanceBase {
 						for (const [k, v] of Object.entries(p)) {
 							nb += (nb == '' ? '' : ', ') + `${k}: ${v}`
 						}
-						this.log('debug', nb)
 					}
 					if (p.locationId || p.vendorId || p.pnpId) {
+            let path = p.path ? p.path : p.comName
+            let manu = p.manufacturer ? p.manufacturer : 'Internal'
 						this.foundPorts.push({
-							path: p.path ? p.path : p.comName,
-							manufacturer: p.manufacturer ? p.manufacturer : 'Internal',
+							path: path,
+							manufacturer: manu,
 						})
+ 						this.log('debug', `found: ${path} : ${manu}`)
+
 					}
 				})
 				if (this.foundPorts.length > 0) {
