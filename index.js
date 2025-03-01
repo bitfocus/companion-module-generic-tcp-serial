@@ -55,6 +55,7 @@ class TSPInstance extends InstanceBase {
 		this.tSockets = []
 		this.sPortPath = 'none'
 		this.isOpen = false
+		this.allPorts = false
 		this.IPPort = 32100
 		this.devMode = process.env.DEVELOPER
 	}
@@ -124,6 +125,7 @@ class TSPInstance extends InstanceBase {
 		this.config = config
 		this.clearAll()
 		this.isListening = false
+		this.allPorts = config.showAll || false
 		this.IPPort = config.iport || 32100
 		this.sPortPath = config.sport || 'none'
 		this.tSockets = []
@@ -193,7 +195,7 @@ class TSPInstance extends InstanceBase {
 
 		this.sPort.open()
 
-		this.doUpdateStatus()
+		//this.doUpdateStatus()
 	}
 
 	/**
@@ -354,8 +356,9 @@ class TSPInstance extends InstanceBase {
 						for (const [k, v] of Object.entries(p)) {
 							nb += (nb == '' ? '' : ', ') + `${k}: ${v}`
 						}
+						this.log('debug', nb)
 					}
-					if (p.locationId || p.vendorId || p.pnpId) {
+					if (this.allPorts || p.locationId || p.vendorId || p.pnpId) {
             let path = p.path ? p.path : p.comName
             let manu = p.manufacturer ? p.manufacturer : 'Internal'
 						this.foundPorts.push({
@@ -493,6 +496,13 @@ class TSPInstance extends InstanceBase {
 				default: this.IPPort,
 				regex: Regex.PORT,
 			},
+			{
+				type: 'checkbox',
+				id: 'showAll',
+				label: 'Show Native (non-USB) Ports',
+				default: false,
+				width: 12,
+			}
 		]
 
 		if (this.foundPorts.length == 0) {
