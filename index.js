@@ -547,6 +547,8 @@ class TSPInstance extends InstanceBase {
 				},
 				{
 					type: 'dropdown',
+					allowCustom: true,
+					tooltip: 'Custom entries are not checked for invalid values.',
 					id: 'baud',
 					label: 'Baud Rate',
 					width: 6,
