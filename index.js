@@ -161,10 +161,10 @@ class TSPInstance extends InstanceBase {
 		let portOptions = {
 			path: this.sPortPath,
 			autoOpen: false,
-			baudRate: parseInt(this.config.baud),
-			dataBits: parseInt(this.config.bits),
-			stopBits: parseInt(this.config.stop),
-			parity: this.config.parity,
+			baudRate: parseInt(this.config.baud) || CHOICES.BAUD_RATES[0].id,
+			dataBits: parseInt(this.config.bits) || CHOICES.BITS[0].id,
+			stopBits: parseInt(this.config.stop) || CHOICES.STOP[0].id,
+			parity: this.config.parity || CHOICES.PARITY[0].id,
 		}
 
 		this.sPort = new SerialPort(portOptions)
@@ -346,10 +346,11 @@ class TSPInstance extends InstanceBase {
 		}
 
 		this.scanning = true
-		this.foundPorts = []
 
 		SerialPort.list().then(
 			(ports) => {
+				// build the new list separately, so the config page never sees a half-built (empty) list
+				const foundPorts = []
 				ports.forEach((p) => {
 					if (this.devMode) {
 						let nb = ''
@@ -361,7 +362,7 @@ class TSPInstance extends InstanceBase {
 					if (this.allPorts || p.locationId || p.vendorId || p.pnpId) {
             let path = p.path ? p.path : p.comName
             let manu = p.manufacturer ? p.manufacturer : 'Internal'
-						this.foundPorts.push({
+						foundPorts.push({
 							path: path,
 							manufacturer: manu,
 						})
@@ -369,9 +370,10 @@ class TSPInstance extends InstanceBase {
 
 					}
 				})
-				if (this.foundPorts.length > 0) {
-					this.foundPorts.unshift({ path: 'none', manufacturer: 'Not configured' })
+				if (foundPorts.length > 0) {
+					foundPorts.unshift({ path: 'none', manufacturer: 'Not configured' })
 				}
+				this.foundPorts = foundPorts
 				this.doUpdateStatus()
 				this.scanning = false
 			},
@@ -514,109 +516,105 @@ class TSPInstance extends InstanceBase {
 				value:
 					"No ports detected yet, which may take a few seconds.<br>Select the 'Connections' tab and wait for log entry 'No serial port configured' Then choose 'Edit' to return here. ",
 			})
+			ports = [{ id: 'none', label: 'No serial ports detected' }]
 		} else {
-			if (this.foundPorts && this.foundPorts.length) {
-				this.foundPorts.forEach((port) => {
-					ports.push({ id: port.path, label: `${port.manufacturer} (${port.path})` })
-				})
-
-				let portObj = ports.find((port) => port.id === this.config.sport)
-
-				if (!portObj) {
-					if (this.config.selectfirstfound) {
-						this.log('info', 'Previously selected port (' + this.config.sport + ') not found.')
-						if (this.ports.length > 1) {
-							this.log('info', 'Selecting first found port: ' + ports[1].id)
-							this.config.sport = ports[1].id
-						}
-					}
-				}
-			} else {
-				ports = [{ id: 'none', label: 'No serial ports detected' }]
-			}
-
-			fields.push(
-				{
-					type: 'dropdown',
-          allowCustom: true,
-					id: 'sport',
-					label: 'Serial port',
-					width: 12,
-					value: ports[ports.length==1 ? 0 : 1].id,
-					choices: ports,
-				},
-				{
-					type: 'dropdown',
-					allowCustom: true,
-					tooltip: 'Custom entries are not checked for invalid values.',
-					id: 'baud',
-					label: 'Baud Rate',
-					width: 6,
-					value: CHOICES.BAUD_RATES[0].id,
-					choices: CHOICES.BAUD_RATES,
-				},
-				{
-					type: 'dropdown',
-					id: 'bits',
-					label: 'Data Bits',
-					width: 6,
-					value: CHOICES.BITS[0].id,
-					choices: CHOICES.BITS,
-				},
-				{
-					type: 'dropdown',
-					id: 'parity',
-					label: 'Parity',
-					width: 6,
-					value: CHOICES.PARITY[0].id,
-					choices: CHOICES.PARITY,
-				},
-				{
-					type: 'dropdown',
-					id: 'stop',
-					label: 'Stop Bits',
-					width: 6,
-					value: CHOICES.STOP[0].id,
-					choices: CHOICES.STOP,
-				}
-			)
-
-			//Select First Port if Previous Port is Not Found
-			fields.push({
-				type: 'checkbox',
-				id: 'selectfirstfound',
-				label: 'Select First Found Port if Previously Configured Port is Not Found',
-				default: false,
-				width: 12,
+			this.foundPorts.forEach((port) => {
+				ports.push({ id: port.path, label: `${port.manufacturer} (${port.path})` })
 			})
 
-			//Response Expected fields
-			fields.push(
-				{
-					type: 'checkbox',
-					id: 'response',
-					label: 'Response Expected',
-					default: false,
-					width: 3,
-				},
-				{
-					type: 'textinput',
-					id: 'maxresponse',
-					label: 'Max Response Time Allowed (in ms)',
-					default: 1000,
-					width: 3,
-					isVisible: (configValues) => configValues.response === true,
-				},
-				{
-					type: 'textinput',
-					id: 'errormessage',
-					label: 'Message to emit to TCP Clients if no response received',
-					default: 'ERR:NORESPONSE',
-					width: 3,
-					isVisible: (configValues) => configValues.response === true,
+			let portObj = ports.find((port) => port.id === this.config?.sport)
+
+			if (!portObj && this.config?.selectfirstfound) {
+				this.log('info', 'Previously selected port (' + this.config.sport + ') not found.')
+				if (ports.length > 1) {
+					this.log('info', 'Selecting first found port: ' + ports[1].id)
+					this.config.sport = ports[1].id
 				}
-			)
+			}
 		}
+
+		// These fields are always included, so that Companion applies their defaults when a connection is created
+		fields.push(
+			{
+				type: 'dropdown',
+				allowCustom: true,
+				id: 'sport',
+				label: 'Serial port',
+				width: 12,
+				default: 'none',
+				choices: ports,
+			},
+			{
+				type: 'dropdown',
+				allowCustom: true,
+				tooltip: 'Custom entries are not checked for invalid values.',
+				id: 'baud',
+				label: 'Baud Rate',
+				width: 6,
+				default: CHOICES.BAUD_RATES[0].id,
+				choices: CHOICES.BAUD_RATES,
+			},
+			{
+				type: 'dropdown',
+				id: 'bits',
+				label: 'Data Bits',
+				width: 6,
+				default: CHOICES.BITS[0].id,
+				choices: CHOICES.BITS,
+			},
+			{
+				type: 'dropdown',
+				id: 'parity',
+				label: 'Parity',
+				width: 6,
+				default: CHOICES.PARITY[0].id,
+				choices: CHOICES.PARITY,
+			},
+			{
+				type: 'dropdown',
+				id: 'stop',
+				label: 'Stop Bits',
+				width: 6,
+				default: CHOICES.STOP[0].id,
+				choices: CHOICES.STOP,
+			}
+		)
+
+		//Select First Port if Previous Port is Not Found
+		fields.push({
+			type: 'checkbox',
+			id: 'selectfirstfound',
+			label: 'Select First Found Port if Previously Configured Port is Not Found',
+			default: false,
+			width: 12,
+		})
+
+		//Response Expected fields
+		fields.push(
+			{
+				type: 'checkbox',
+				id: 'response',
+				label: 'Response Expected',
+				default: false,
+				width: 3,
+			},
+			{
+				type: 'textinput',
+				id: 'maxresponse',
+				label: 'Max Response Time Allowed (in ms)',
+				default: 1000,
+				width: 3,
+				isVisible: (configValues) => configValues.response === true,
+			},
+			{
+				type: 'textinput',
+				id: 'errormessage',
+				label: 'Message to emit to TCP Clients if no response received',
+				default: 'ERR:NORESPONSE',
+				width: 3,
+				isVisible: (configValues) => configValues.response === true,
+			}
+		)
 
 		return fields
 	}
