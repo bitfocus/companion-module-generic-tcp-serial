@@ -1,8 +1,8 @@
 node_modules/
 .eslintrc
 /pkg
-/pkg.tgz
+/*.tgz
 DEBUG-INSPECT
 DEBUG-PACKAGED
 DEBUG-PACKAGE
-.yarn/install-state.gz
+/.yarn
